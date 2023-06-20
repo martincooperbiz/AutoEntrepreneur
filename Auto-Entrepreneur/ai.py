@@ -27,3 +27,10 @@ class AI:
         except Exception as e:
             logger.error(f"Error generating AI response: {e}")
             return None
+    def generate_business_plan(self, prompt):
+        try: 
+            plan = self.generate(prompt)
+            return Document("Business Plan", plan, "AI")
+        except Exception as e:
+            logger.error(f"Error generating AI response for the business plan: {e}")
+            return None
