@@ -1,14 +1,20 @@
-from __future__ import annotations
-
-import logging
-logger = logging.getLogger(__name__)
 import openai
+import logging
+from dotenv import load_dotenv
+import os
+# Load environment variables from .env file
+load_dotenv()
+
+logger = logging.getLogger(__name__)
+
+
 
 
 class AI:
-    def __init__(self, model="text-davinci-002", temperature=0.5):
-        self.model = model
+    def __init__(self, model=None, temperature=0.5):
+        self.model = model or os.getenv("MODEL")
         self.temperature = temperature
+        openai.api_key = os.getenv("OPENAI_API_KEY")
 
     def generate(self, prompt):
         try: 
