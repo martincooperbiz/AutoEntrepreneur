@@ -1,40 +1,43 @@
 from dataclasses import dataclass
 from pathlib import Path
+import logging
+logger = logging.getLogger(__name__)
 
-
-# This class represents a simple database that stores its data as files in a directory.
 class DB:
-    """A simple key-value store, where keys are filenames and values are file contents."""
-
     def __init__(self, path):
         self.path = Path(path).absolute()
-
         self.path.mkdir(parents=True, exist_ok=True)
 
     def __getitem__(self, key):
         full_path = self.path / key
-
-        if not full_path.is_file():
+        try:
+            with full_path.open("r", encoding="utf-8") as f:
+                return f.read()
+        except FileNotFoundError:
+            logger.error(f"Key not found: {key}")
             raise KeyError(key)
-        with full_path.open("r", encoding="utf-8") as f:
-            return f.read()
+        except Exception as e:
+            logger.error(f"Error reading key {key}: {e}")
+            raise
 
     def __setitem__(self, key, val):
         full_path = self.path / key
         full_path.parent.mkdir(parents=True, exist_ok=True)
+        try:
+            if isinstance(val, str):
+                full_path.write_text(val, encoding="utf-8")
+            else:
+                raise TypeError("val must be either a str or bytes")
+        except Exception as e:
+            logger.error(f"Error writing key {key}: {e}")
+            raise
 
-        if isinstance(val, str):
-            full_path.write_text(val, encoding="utf-8")
+    def __delitem__(self, key):
+        full_path = self.path / key
+        if full_path.is_file():
+            full_path.unlink()
         else:
-            # If val is neither a string nor bytes, raise an error.
-            raise TypeError("val must be either a str or bytes")
+            raise KeyError(key)
 
-
-# dataclass for all dbs:
-@dataclass
-class DBs:
-    memory: DB
-    logs: DB
-    identity: DB
-    input: DB
-    workspace: DB
+    def keys(self):
+        return [str(p.relative_to(self.path))
